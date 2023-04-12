@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { Directus } = require('@directus/sdk');
+
 const nextConfig = {
   reactStrictMode: true,
   publicRuntimeConfig: {
@@ -15,6 +17,18 @@ const nextConfig = {
         hostname: process.env.DIRECTUS_HOSTNAME,
       },
     ],
+  },
+  async redirects() {
+    const redirect = process.env.DIRECTUS_REDIRECT;
+    if (!redirect) {
+      return null;
+    }
+    const directus = new Directus(process.env.DIRECTUS_URL);
+    await directus.auth.static(process.env.DIRECTUS_TOKEN);
+    const { data } = await directus.items('redirects').readByQuery({
+      fields: ['source', 'destination', 'permanent'],
+    });
+    return data;
   },
 }
 
